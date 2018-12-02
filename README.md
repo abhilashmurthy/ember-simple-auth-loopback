@@ -12,13 +12,13 @@ ember install ember-simple-auth ember-simple-auth-loopback
 
 This addon provides an authenticator to login users and store their session.
 
-First create an `authenticators/application.js` file with the following:
+First create an `authenticators/loopback.js` file with the following:
 
 ```js
 import Loopback from 'ember-simple-auth-loopback/authenticators/loopback';
 
 export default Loopback.extend({
-  loginEndpoint: 'http://0.0.0.0:3000/api/Users/login',
+  userModelName: 'User',
 });
 ```
 
@@ -28,7 +28,7 @@ Then use this from a controller (or route):
 session: Ember.inject.service(),
 
 login(email, password) {
-  this.get('session').authenticate('authenticator:application', email, password)
+  this.get('session').authenticate('authenticator:loopback', email, password)
     .catch((reason) => {
       console.log(reason);
     });
@@ -56,23 +56,14 @@ And, in the template:
 ## Authorizing API Requests
 
 Once logged in, API requests will need to be authorized using the token sent back from the login request.
-To do this, first setup an `app/authorizers/application.js`:
-
-```js
-import Loopback from 'ember-simple-auth-loopback/authorizers/loopback';
-
-export default Loopback.extend();
-```
-
-Then, in the `app/adapters/application.js`, use the `DataAdapterMixin` from `ember-simple-auth`:
+To do this, in the `app/adapters/application.js`, use this:
 
 ```js
 import JSONAPIAdapter from 'ember-data/adapters/json-api';
 import DataAdapterMixin from 'ember-simple-auth/mixins/data-adapter-mixin';
+import LoopbackDataAdapterMixin from 'ember-simple-auth-loopback/mixins/loopback-data-adapter-mixin';
 
-export default JSONAPIAdapter.extend(DataAdapterMixin, {
-  authorizer: 'authorizer:application',
-
+export default JSONAPIAdapter.extend(DataAdapterMixin, LoopbackDataAdapterMixin, {
   host: 'http://localhost:3000',
   namespace: 'api',
 });
