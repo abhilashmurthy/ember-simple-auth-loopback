@@ -2,10 +2,12 @@
 import BaseAuthenticator from 'ember-simple-auth/authenticators/base';
 
 import RSVP from 'rsvp';
+import { inject as injectService } from '@ember/service';
 import { A } from '@ember/array';
 import { computed } from '@ember/object';
 import { run } from '@ember/runloop';
 import { isEmpty } from '@ember/utils';
+import { pluralize } from 'ember-inflector';
 
 /**
   Authenticator that works with Loopback's default authentication
@@ -16,16 +18,33 @@ import { isEmpty } from '@ember/utils';
   @public
 */
 export default BaseAuthenticator.extend({
+  ajax:  injectService(),
+  store: injectService(),
+
+  /**
+    The default name of the user model to log in with
+
+    @property userModelName
+    @type String
+    @default 'User'
+    @public
+  */
+  userModelName: 'User',
+
   /**
     The endpoint on the server that authentication and token refresh requests
     are sent to.
 
     @property loginEndpoint
-    @type String
-    @default '/token'
+    @type computed
     @public
   */
-  loginEndpoint: '/User/login',
+  loginEndpoint: computed('userModelName', function() {
+    const BASE_URL = this.get('store').adapterFor('application').buildURL();
+    const pluralizedModelName = pluralize(this.get('userModelName'));
+
+    return `${BASE_URL}/${pluralizedModelName}/login`;
+  }),
 
   /**
     The endpoint on the server that token revocation requests are sent to. Only
