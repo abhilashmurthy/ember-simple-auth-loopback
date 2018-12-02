@@ -1,9 +1,11 @@
 /* jscs:disable requireDotNotation */
-import Ember from 'ember';
 import BaseAuthenticator from 'ember-simple-auth/authenticators/base';
 
-const { RSVP, isEmpty, run, computed } = Ember;
-const assign = Ember.assign || Ember.merge;
+import RSVP from 'rsvp';
+import { A } from '@ember/array';
+import { computed } from '@ember/object';
+import { run } from '@ember/runloop';
+import { isEmpty } from '@ember/utils';
 
 /**
   Authenticator that works with Loopback's default authentication
@@ -85,8 +87,8 @@ export default BaseAuthenticator.extend({
         run(() => {
           resolve(response);
         });
-      }, (xhr) => {
-        run(null, reject, xhr.responseJSON || xhr.responseText);
+      }, (response) => {
+        run(null, reject, response.payload || response.message);
       });
     });
   },
@@ -117,7 +119,7 @@ export default BaseAuthenticator.extend({
         success.apply(this, [resolve]);
       } else {
         const requests = [];
-        Ember.A(['id']).forEach((tokenType) => {
+        A(['id']).forEach((tokenType) => {
           const token = data[tokenType];
           if (!isEmpty(token)) {
             requests.push(this.makeRequest(logoutEndpoint, {
@@ -144,13 +146,12 @@ export default BaseAuthenticator.extend({
   */
   makeRequest(url, data) {
     const options = {
-      url,
-      data: JSON.stringify(data),
+      data:        JSON.stringify(data),
       type:        'POST',
       dataType:    'json',
       contentType: 'application/json'
     };
 
-    return Ember.$.ajax(options);
+    return this.get('ajax').request(url, options);
   },
 });
