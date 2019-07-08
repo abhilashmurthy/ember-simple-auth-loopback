@@ -9,6 +9,15 @@ import { run } from '@ember/runloop';
 import { isEmpty } from '@ember/utils';
 import { pluralize } from 'ember-inflector';
 
+function computedEndpoint() {
+  return computed('userModelName', function (key) {
+    const BASE_URL = this.get('store').adapterFor('application').buildURL();
+    const pluralizedModelName = pluralize(this.get('userModelName'));
+
+    return `${BASE_URL}/${pluralizedModelName}/${key.split('Endpoint')[0]}`;
+  });
+}
+
 /**
   Authenticator that works with Loopback's default authentication
 
@@ -39,12 +48,7 @@ export default BaseAuthenticator.extend({
     @type computed
     @public
   */
-  loginEndpoint: computed('userModelName', function() {
-    const BASE_URL = this.get('store').adapterFor('application').buildURL();
-    const pluralizedModelName = pluralize(this.get('userModelName'));
-
-    return `${BASE_URL}/${pluralizedModelName}/login`;
-  }),
+  loginEndpoint: computedEndpoint(),
 
   /**
     The endpoint on the server that token revocation requests are sent to. Only
@@ -56,11 +60,10 @@ export default BaseAuthenticator.extend({
     {{#crossLink "OAuth2PasswordGrantAuthenticator/invalidate:method"}}{{/crossLink}}).__
 
     @property logoutEndpoint
-    @type String
-    @default null
+    @type computed
     @public
   */
-  logoutEndpoint: null,
+  logoutEndpoint: computedEndpoint(),
 
   /**
     Restores the session from a session data object; __will return a resolving
