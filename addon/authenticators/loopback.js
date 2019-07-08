@@ -146,7 +146,7 @@ export default BaseAuthenticator.extend({
           if (!isEmpty(token)) {
             requests.push(this.makeRequest(logoutEndpoint, {
               'token_type_hint': tokenType, token
-            }));
+            }, { Authorization: token }));
           }
         });
         const succeed = () => {
@@ -166,8 +166,9 @@ export default BaseAuthenticator.extend({
     @return {jQuery.Deferred} A promise like jQuery.Deferred as returned by `$.ajax`
     @protected
   */
-  makeRequest(url, data) {
+  makeRequest(url, data, headers) {
     const options = {
+      headers,
       data:        JSON.stringify(data),
       type:        'POST',
       dataType:    'json',
